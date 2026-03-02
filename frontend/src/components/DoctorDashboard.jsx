@@ -35,13 +35,18 @@ export default function DoctorDashboard({ doctorId }) {
     try {
       await axios.post(
         `${API_URL}/attend-patient/${selectedPatient.appointment_id}`,
-        consultData
+        consultData,
       );
       alert("Consultation complete! Prescriptions and Bills forwarded.");
-      
+
       // Reset state and refresh queue
       setSelectedPatient(null);
-      setConsultData({ symptoms: "", diagnosis: "", prescription: "", medicine_cost: 0 });
+      setConsultData({
+        symptoms: "",
+        diagnosis: "",
+        prescription: "",
+        medicine_cost: 0,
+      });
       loadQueue();
     } catch (error) {
       console.error("Error saving record", error);
@@ -131,42 +136,70 @@ export default function DoctorDashboard({ doctorId }) {
             <div className="p-6">
               <form onSubmit={handleAttend} className="space-y-5">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Symptoms</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Symptoms
+                  </label>
                   <textarea
                     className="w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
                     rows="2"
                     value={consultData.symptoms}
-                    onChange={(e) => setConsultData({ ...consultData, symptoms: e.target.value })}
+                    onChange={(e) =>
+                      setConsultData({
+                        ...consultData,
+                        symptoms: e.target.value,
+                      })
+                    }
                     required
                   ></textarea>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Diagnosis</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Diagnosis
+                  </label>
                   <input
                     type="text"
                     className="w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
                     value={consultData.diagnosis}
-                    onChange={(e) => setConsultData({ ...consultData, diagnosis: e.target.value })}
+                    onChange={(e) =>
+                      setConsultData({
+                        ...consultData,
+                        diagnosis: e.target.value,
+                      })
+                    }
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Prescription</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Prescription
+                  </label>
                   <textarea
                     className="w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
                     rows="3"
                     value={consultData.prescription}
-                    onChange={(e) => setConsultData({ ...consultData, prescription: e.target.value })}
+                    onChange={(e) =>
+                      setConsultData({
+                        ...consultData,
+                        prescription: e.target.value,
+                      })
+                    }
                     required
                   ></textarea>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Medicine Cost ($)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Medicine Cost ($)
+                  </label>
                   <input
                     type="number"
                     className="w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
                     value={consultData.medicine_cost}
-                    onChange={(e) => setConsultData({ ...consultData, medicine_cost: parseFloat(e.target.value) || 0 })}
+                    onChange={(e) =>
+                      setConsultData({
+                        ...consultData,
+                        medicine_cost: parseFloat(e.target.value) || 0,
+                      })
+                    }
                     required
                   />
                 </div>

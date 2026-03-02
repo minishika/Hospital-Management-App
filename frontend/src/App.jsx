@@ -198,7 +198,8 @@ function App() {
               {/* Public or Admin/Receptionist can see Register */}
               {(!currentUser ||
                 currentUser?.role === "Admin" ||
-                currentUser?.role === "Receptionist" || currentUser?.role === "Nurse") && (
+                currentUser?.role === "Receptionist" ||
+                currentUser?.role === "Nurse") && (
                 <button
                   onClick={() => setView("patient")}
                   className={`px-4 py-2 rounded-md font-medium transition ${
@@ -272,33 +273,38 @@ function App() {
                     </button>
                   )}
 
-                  {currentUser.role === "Doctor" && (<div className="flex items-center ml-6 border-l border-slate-600 pl-6">
-                    <span className="text-gray-300 mr-2">Nurse Logged in</span>
-                    <span className="text-green-400 font-bold mr-4">
-                      {currentUser.name}
-                    </span>
-                    <button
-                      onClick={handleLogout}
-                      className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-md text-sm font-bold transition text-white shadow-md"
-                    >
-                      Logout
-                    </button>
-                  </div>)}
-                
+                  {currentUser.role === "Doctor" && (
+                    <div className="flex items-center ml-6 border-l border-slate-600 pl-6">
+                      <span className="text-gray-300 mr-2">
+                        Nurse Logged in
+                      </span>
+                      <span className="text-green-400 font-bold mr-4">
+                        {currentUser.name}
+                      </span>
+                      <button
+                        onClick={handleLogout}
+                        className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-md text-sm font-bold transition text-white shadow-md"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  )}
 
                   {/* LOGGED IN USER INFO TRAY */}
-                  {currentUser.role === "Nurse" && (<div className="flex items-center ml-6 border-l border-slate-600 pl-6">
-                    <span className="text-gray-300 mr-2">Logged in as:</span>
-                    <span className="text-green-400 font-bold mr-4">
-                      Nurse
-                    </span>
-                    <button
-                      onClick={handleLogout}
-                      className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-md text-sm font-bold transition text-white shadow-md"
-                    >
-                      Logout
-                    </button>
-                  </div>)}
+                  {currentUser.role === "Nurse" && (
+                    <div className="flex items-center ml-6 border-l border-slate-600 pl-6">
+                      <span className="text-gray-300 mr-2">Logged in as:</span>
+                      <span className="text-green-400 font-bold mr-4">
+                        Nurse
+                      </span>
+                      <button
+                        onClick={handleLogout}
+                        className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-md text-sm font-bold transition text-white shadow-md"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  )}
                 </>
               )}
 
@@ -560,61 +566,66 @@ function App() {
         )}
 
         {/* VIEW 3: PHARMACY */}
-        {view === "pharmacy" && (currentUser?.role === "Pharmacist" || currentUser?.role==="Nurse") && (
-          <div>
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-3xl font-bold text-gray-800">Pharmacy Hub</h2>
-              <button
-                className="border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white font-semibold py-2 px-4 rounded-lg transition"
-                onClick={loadPharmacy}
-              >
-                🔄 Refresh Scripts
-              </button>
+        {view === "pharmacy" &&
+          (currentUser?.role === "Pharmacist" ||
+            currentUser?.role === "Nurse") && (
+            <div>
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-3xl font-bold text-gray-800">
+                  Pharmacy Hub
+                </h2>
+                <button
+                  className="border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white font-semibold py-2 px-4 rounded-lg transition"
+                  onClick={loadPharmacy}
+                >
+                  🔄 Refresh Scripts
+                </button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {prescriptions.length === 0 ? (
+                  <p className="text-gray-500">No active prescriptions.</p>
+                ) : (
+                  prescriptions.map((script) => (
+                    <div
+                      key={script.record_id}
+                      className="bg-white p-6 rounded-xl shadow-md border-l-4 border-blue-500"
+                    >
+                      <div className="flex justify-between items-start mb-4">
+                        <h3 className="text-xl font-bold text-gray-800">
+                          {script.patient_name}
+                        </h3>
+                        <span className="text-sm text-gray-500">
+                          {script.date}
+                        </span>
+                      </div>
+                      <div className="mb-4">
+                        <p className="text-sm text-gray-500 uppercase font-semibold">
+                          Diagnosis
+                        </p>
+                        <p className="bg-gray-50 p-2 rounded mt-1 border">
+                          {script.diagnosis}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500 uppercase font-semibold">
+                          Prescribed
+                        </p>
+                        <p className="bg-blue-50 p-3 rounded mt-1 border border-blue-100 font-mono text-sm whitespace-pre-wrap">
+                          {script.prescription}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {prescriptions.length === 0 ? (
-                <p className="text-gray-500">No active prescriptions.</p>
-              ) : (
-                prescriptions.map((script) => (
-                  <div
-                    key={script.record_id}
-                    className="bg-white p-6 rounded-xl shadow-md border-l-4 border-blue-500"
-                  >
-                    <div className="flex justify-between items-start mb-4">
-                      <h3 className="text-xl font-bold text-gray-800">
-                        {script.patient_name}
-                      </h3>
-                      <span className="text-sm text-gray-500">
-                        {script.date}
-                      </span>
-                    </div>
-                    <div className="mb-4">
-                      <p className="text-sm text-gray-500 uppercase font-semibold">
-                        Diagnosis
-                      </p>
-                      <p className="bg-gray-50 p-2 rounded mt-1 border">
-                        {script.diagnosis}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500 uppercase font-semibold">
-                        Prescribed
-                      </p>
-                      <p className="bg-blue-50 p-3 rounded mt-1 border border-blue-100 font-mono text-sm whitespace-pre-wrap">
-                        {script.prescription}
-                      </p>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        )}
+          )}
 
         {/* VIEW 4: BILLING */}
         {view === "billing" &&
           (currentUser?.role === "Admin" ||
-            currentUser?.role === "Receptionist" || currentUser?.role === "Nurse") && (
+            currentUser?.role === "Receptionist" ||
+            currentUser?.role === "Nurse") && (
             <div>
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-3xl font-bold text-gray-800">
