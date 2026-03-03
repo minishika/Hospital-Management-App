@@ -14,6 +14,26 @@ export default function DoctorDashboard({ doctorId }) {
     medicine_cost: 0,
   });
 
+  // Helper function to render urgency badge
+  const renderUrgency = (level) => {
+    let bgColor = "bg-green-100 text-green-700";
+    let text = "Routine";
+
+    if (level >= 4) {
+      bgColor = "bg-red-100 text-red-700";
+      text = "Emergency";
+    } else if (level >= 2) {
+      bgColor = "bg-yellow-100 text-yellow-700";
+      text = "Moderate";
+    }
+
+    return (
+      <span className={`px-3 py-1 rounded-full text-xs font-bold ${bgColor}`}>
+        {text}
+      </span>
+    );
+  };
+
   // Fetch the queue as soon as the component loads or the doctorId changes
   useEffect(() => {
     if (doctorId) {
@@ -58,7 +78,7 @@ export default function DoctorDashboard({ doctorId }) {
       {/* HEADER */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-3xl font-bold text-gray-800">My Console</h2>
+          <h2 className="text-3xl font-bold text-white">My Console</h2>
           <p className="text-blue-600 font-medium">Doctor ID: {doctorId}</p>
         </div>
         <button
@@ -70,8 +90,8 @@ export default function DoctorDashboard({ doctorId }) {
       </div>
 
       {/* QUEUE TABLE */}
-      <div className="bg-white rounded-xl shadow-md overflow-hidden">
-        <table className="w-full text-left border-collapse">
+      <div className="bg-slate-900 rounded-xl shadow-md overflow-hidden">
+        <table className="w-full text-left border-collapse hover:bg-slate-700">
           <thead className="bg-slate-800 text-white">
             <tr>
               <th className="py-4 px-6 font-semibold text-sm">Token #</th>
@@ -81,30 +101,30 @@ export default function DoctorDashboard({ doctorId }) {
               <th className="py-4 px-6 font-semibold text-sm">Action</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody className="divide-y divide-gray-200 bg-slate-800">
             {queue.length === 0 ? (
               <tr>
-                <td colSpan="4" className="py-8 text-center text-gray-500">
+                <td colSpan="5" className="py-8 text-center text-gray-500">
                   Queue is empty.
                 </td>
               </tr>
             ) : (
               queue.map((p) => (
-                <tr key={p.appointment_id} className="hover:bg-gray-50">
-                  <td className="py-4 px-6 font-bold">#{p.appointment_id}</td>
-                  <td className="py-4 px-6">{p.patient_name}</td>
+                <tr
+                  key={p.appointment_id}
+                  className="hover:bg-stone-700 text-gray-300"
+                >
+                  <td className="py-4 px-6 font-bold text-red-500">
+                    #{p.appointment_id}
+                  </td>
+                  <td className="py-4 px-6 text-purple-700 font-bold">
+                    {p.patient_name}
+                  </td>
 
                   <td className="py-4 px-6">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-bold ${
-                        p.urgency_level >= 4
-                          ? "bg-red-100 text-red-700"
-                          : "bg-yellow-100 text-yellow-700"
-                      }`}
-                    >
-                      Level {p.urgency_level}
-                    </span>
+                    {renderUrgency(p.urgency_level)}
                   </td>
+
                   <td className="py-4 px-6 text-sm">
                     {p.vitals ? (
                       <div className="space-y-1">
@@ -162,7 +182,7 @@ export default function DoctorDashboard({ doctorId }) {
                     Symptoms
                   </label>
                   <textarea
-                    className="w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border rounded-lg p-3 outline-none text-black focus:ring-2 focus:ring-blue-500"
                     rows="2"
                     value={consultData.symptoms}
                     onChange={(e) =>
@@ -180,7 +200,7 @@ export default function DoctorDashboard({ doctorId }) {
                   </label>
                   <input
                     type="text"
-                    className="w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border rounded-lg p-3 outline-none text-black focus:ring-2 focus:ring-blue-500"
                     value={consultData.diagnosis}
                     onChange={(e) =>
                       setConsultData({
@@ -196,7 +216,7 @@ export default function DoctorDashboard({ doctorId }) {
                     Prescription
                   </label>
                   <textarea
-                    className="w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border rounded-lg p-3 outline-none text-black focus:ring-2 focus:ring-blue-500"
                     rows="3"
                     value={consultData.prescription}
                     onChange={(e) =>
@@ -214,7 +234,7 @@ export default function DoctorDashboard({ doctorId }) {
                   </label>
                   <input
                     type="number"
-                    className="w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border rounded-lg p-3 outline-none text-black focus:ring-2 focus:ring-blue-500"
                     value={consultData.medicine_cost}
                     onChange={(e) =>
                       setConsultData({
@@ -227,7 +247,7 @@ export default function DoctorDashboard({ doctorId }) {
                 </div>
                 <button
                   type="submit"
-                  className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-lg transition shadow-md"
+                  className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-lg transition duration-300 shadow-md cursor-pointer hover:shadow-green-300/50 hover:shadow-2xl hover:scale-105"
                 >
                   Complete Consultation & Dispatch Records
                 </button>

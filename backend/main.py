@@ -4,7 +4,8 @@ from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
 from sqlalchemy.sql import func
 from pydantic import BaseModel
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+from zoneinfo import ZoneInfo
 import pytz
 import heapq
 
@@ -13,6 +14,7 @@ SQLALCHEMY_DATABASE_URL = "sqlite:///./hospital.db"
 engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
+
 
 # --- 2. ADVANCED DATABASE MODELS ---
 class User(Base):
@@ -33,6 +35,7 @@ class Appointment(Base):
     wait_time_mins = Column(Integer, default=0)
     status = Column(String, default="Pending Triage")
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    appointment_time = Column(DateTime(timezone=True), nullable=True)
     
 class Vitals(Base):
     __tablename__ = "vitals"
@@ -69,6 +72,46 @@ class TriageData(BaseModel):
     temperature: float   
     weight: float        
     oxygen_level: int
+
+def allocate_appointment_time(db, doctor_id, urgency):
+    ist = ZoneInfo("Asia/Kolkata")
+    now = datetime.now(ist)
+
+    # Doctor day start
+    start_time = now.replace(hour=9, minute=0, second=0, microsecond=0)
+
+    if now > start_time:
+        start_time = now
+
+    # Get today's appointments for this doctor
+    appointments = db.query(Appointment)\
+        .filter(Appointment.doctor_id == doctor_id)\
+        .filter(Appointment.appointment_time != None)\
+        .order_by(Appointment.appointment_time.asc())\
+        .all()
+
+    slot_time = start_time
+
+    # Emergency = immediate next slot
+    if urgency == 3:
+        return slot_time
+
+    # Intermediate = after emergencies
+    if urgency == 2:
+        slot_time += timedelta(minutes=15)
+        return slot_time
+
+    # Normal = after emergency + intermediate
+    slot_time += timedelta(minutes=30)
+    return slot_time
+
+def get_urgency_label(level: int):
+    mapping = {
+        1: "Routine",
+        3: "Intermediate",
+        5: "Emergency"
+    }
+    return mapping.get(level, "Unknown")
 
 def init_db():
     db = SessionLocal()
@@ -164,7 +207,7 @@ def admin_all_appointments(db: Session = Depends(get_db)):
 
 @app.get("/admin/full-history")
 def admin_full_history(db: Session = Depends(get_db)):
-    ist = pytz.timezone("Asia/Kolkata")
+    ist = ZoneInfo("Asia/Kolkata") # Standardize on ZoneInfo
     data = db.query(
         Appointment,
         User,
@@ -179,8 +222,11 @@ def admin_full_history(db: Session = Depends(get_db)):
     .all()
 
     result = []
-
     for a, doctor, v, m, b in data:
+        # Helper to safely convert SQLite time to IST
+        reg_date = a.created_at.replace(tzinfo=timezone.utc).astimezone(ist) if a.created_at else None
+        diss_date = b.paid_at.replace(tzinfo=timezone.utc).astimezone(ist) if b and b.paid_at else None
+
         result.append({
             "appointment_id": a.id,
             "patient_name": a.patient_name,
@@ -190,38 +236,102 @@ def admin_full_history(db: Session = Depends(get_db)):
             "diagnosis": m.diagnosis if m else None,
             "bill_total": b.total_amount if b else None,
             "payment_status": b.payment_status if b else None,
-
-             "timeline": {
-                    "registered_date": a.created_at.astimezone(ist).strftime("%Y-%m-%d %H:%M") if a.created_at else None,
-                    "dismissed_date": b.paid_at.astimezone(ist).strftime("%Y-%m-%d %H:%M") if b and b.paid_at else None
-                 }
+            "timeline": {
+                "registered_date": reg_date.strftime("%Y-%m-%d %I:%M %p") if reg_date else "—",
+                "dismissed_date": diss_date.strftime("%Y-%m-%d %I:%M %p") if diss_date else "—"
+            }
         })
-
     return result
 
 @app.post("/book-appointment/")
 def book_appointment(appt: AppointmentCreate, db: Session = Depends(get_db)):
-    new_appt = Appointment(patient_name=appt.patient_name, doctor_id=appt.doctor_id, urgency_level=appt.urgency_level, wait_time_mins=appt.wait_time_mins)
+
+    allocated_time = allocate_appointment_time(
+        db,
+        appt.doctor_id,
+        appt.urgency_level
+    )
+
+    new_appt = Appointment(
+        patient_name=appt.patient_name,
+        doctor_id=appt.doctor_id,
+        urgency_level=appt.urgency_level,
+        wait_time_mins=appt.wait_time_mins,
+        appointment_time=allocated_time   # ✅ SAVE IT HERE
+    )
+
     db.add(new_appt)
     db.commit()
     db.refresh(new_appt)
-    return {"message": "Appointment booked successfully!", "appointment_id": new_appt.id}
+
+    ist = ZoneInfo("Asia/Kolkata")
+
+    return {
+        "message": "Appointment booked successfully!",
+        "appointment_id": new_appt.id,
+        "appointment_time": allocated_time.astimezone(ist).strftime("%Y-%m-%d %I:%M %p")
+    }
+
+@app.get("/nurse/appointments")
+def nurse_schedule(db: Session = Depends(get_db)):
+
+    ist = ZoneInfo("Asia/Kolkata")
+
+    appts = (
+        db.query(Appointment, User)
+        .join(User, Appointment.doctor_id == User.id)
+        .order_by(Appointment.appointment_time.asc())
+        .all()
+    )
+
+    return [
+        {
+            "patient_name": a.patient_name,
+            "appointment_time": a.appointment_time.astimezone(ist).strftime("%Y-%m-%d %I:%M %p") if a.appointment_time else None,
+            "doctor_name": doctor.name,
+            "urgency_level": get_urgency_label(a.urgency_level)
+        }
+        for a, doctor in appts
+    ]
+
+@app.get("/doctor/{doc_id}/appointments")
+def doctor_schedule(doc_id: int, db: Session = Depends(get_db)):
+
+    ist = ZoneInfo("Asia/Kolkata")
+
+    appts = db.query(Appointment)\
+        .filter(Appointment.doctor_id == doc_id)\
+        .order_by(Appointment.appointment_time.asc())\
+        .all()
+
+    return [
+        {
+            "patient_name": a.patient_name,
+            "appointment_time": a.appointment_time.astimezone(ist).strftime("%Y-%m-%d %I:%M %p") if a.appointment_time else None,
+            "urgency_level": get_urgency_label(a.urgency_level)
+        }
+        for a in appts
+    ]
 
 @app.get("/doctor/{doc_id}/queue")
 def get_doctor_queue(doc_id: int, db: Session = Depends(get_db)):
-
-    queue = db.query(Appointment, Vitals)\
-        .outerjoin(Vitals, Appointment.id == Vitals.appointment_id)\
-        .filter(
-            Appointment.doctor_id == doc_id,
-            Appointment.status == "Waiting for Doctor"
-        )\
-        .order_by(Appointment.urgency_level.desc(), Appointment.id.asc())\
+    queue = db.query(Appointment, Vitals).outerjoin(Vitals, Appointment.id == Vitals.appointment_id)\
+        .filter(Appointment.doctor_id == doc_id, Appointment.status == "Waiting for Doctor")\
         .all()
 
-    result = []
-
+    # Compute priority dynamically
+    prioritized = []
     for appt, vitals in queue:
+        wait_time = (datetime.now(timezone.utc) - appt.created_at.replace(tzinfo=timezone.utc)).total_seconds() / 60
+        doctor_load = 0  # could be computed from today's completed appointments
+        score = calculate_priority(appt.urgency_level, wait_time, doctor_load)
+        prioritized.append((score, appt, vitals))
+    
+    # Highest priority first
+    prioritized.sort(key=lambda x: -x[0])
+
+    result = []
+    for _, appt, vitals in prioritized:
         result.append({
             "appointment_id": appt.id,
             "patient_name": appt.patient_name,
@@ -269,8 +379,23 @@ def attend_patient(appointment_id: int, data: ConsultationData, db: Session = De
 
 @app.get("/pharmacy/prescriptions")
 def get_prescriptions(db: Session = Depends(get_db)):
-    records = db.query(MedicalRecord, Appointment).join(Appointment, MedicalRecord.appointment_id == Appointment.id).order_by(MedicalRecord.created_at.desc()).all()
-    return [{"record_id": r.id, "patient_name": a.patient_name, "diagnosis": r.diagnosis, "prescription": r.prescription, "date": r.created_at.strftime("%Y-%m-%d %H:%M")} for r, a in records]
+    ist = ZoneInfo("Asia/Kolkata")
+    records = db.query(MedicalRecord, Appointment)\
+        .join(Appointment, MedicalRecord.appointment_id == Appointment.id)\
+        .order_by(MedicalRecord.created_at.desc())\
+        .all()
+    
+    return [
+        {
+            "record_id": r.id, 
+            "patient_name": a.patient_name, 
+            "diagnosis": r.diagnosis, 
+            "prescription": r.prescription, 
+            # Force UTC then convert to IST
+            "date": r.created_at.replace(tzinfo=timezone.utc).astimezone(ist).strftime("%Y-%m-%d %I:%M %p") 
+        } 
+        for r, a in records
+    ]
 
 @app.get("/billing/invoices")
 def get_bills(db: Session = Depends(get_db)):
@@ -281,7 +406,7 @@ def get_bills(db: Session = Depends(get_db)):
 def pay_bill(bill_id: int, db: Session = Depends(get_db)):
     bill = db.query(Bill).filter(Bill.id == bill_id).first()
     bill.payment_status = "Paid"
-    bill.paid_at = datetime.utcnow()
+    bill.paid_at = datetime.now(timezone.utc)
     db.commit()
     return {"message": "Payment successful!"}
 

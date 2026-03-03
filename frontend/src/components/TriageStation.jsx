@@ -55,7 +55,7 @@ export default function TriageStation() {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-bold text-gray-800">
+        <h2 className="text-3xl font-bold text-green-500">
           Nurse Triage Station
         </h2>
         <button
@@ -68,7 +68,7 @@ export default function TriageStation() {
 
       <div className="bg-white rounded-xl shadow-md overflow-hidden">
         <table className="w-full text-left border-collapse">
-          <thead className="bg-slate-800 text-white">
+          <thead className="bg-slate-900 text-white">
             <tr>
               <th className="py-4 px-6 font-semibold text-sm">Token #</th>
               <th className="py-4 px-6 font-semibold text-sm">Patient Name</th>
@@ -79,14 +79,17 @@ export default function TriageStation() {
           <tbody className="divide-y divide-gray-200">
             {queue.length === 0 ? (
               <tr>
-                <td colSpan="4" className="py-8 text-center text-gray-500">
+                <td colSpan="4" className="py-8 text-center text-slate-500">
                   No patients waiting for triage.
                 </td>
               </tr>
             ) : (
               queue.map((p) => (
-                <tr key={p.appointment_id} className="hover:bg-gray-50">
-                  <td className="py-4 px-6 font-bold">#{p.appointment_id}</td>
+                <tr
+                  key={p.appointment_id}
+                  className="hover:bg-slate-700 text-slate-300 bg-slate-800"
+                >
+                  <td className="py-4 px-6 font-bold ">#{p.appointment_id}</td>
                   <td className="py-4 px-6">{p.patient_name}</td>
                   <td className="py-4 px-6">
                     <span className="px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700">
@@ -133,7 +136,7 @@ export default function TriageStation() {
                     type="text"
                     placeholder="120/80"
                     required
-                    className="w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500 text-black"
                     value={vitals.blood_pressure}
                     onChange={(e) =>
                       setVitals({ ...vitals, blood_pressure: e.target.value })
@@ -149,7 +152,7 @@ export default function TriageStation() {
                     step="0.1"
                     placeholder="98.6"
                     required
-                    className="w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
+                    className="text-black w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
                     value={vitals.temperature}
                     onChange={(e) =>
                       setVitals({ ...vitals, temperature: e.target.value })
@@ -165,7 +168,7 @@ export default function TriageStation() {
                     step="0.1"
                     placeholder="70"
                     required
-                    className="w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
+                    className="text-black w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
                     value={vitals.weight}
                     onChange={(e) =>
                       setVitals({ ...vitals, weight: e.target.value })
@@ -180,7 +183,7 @@ export default function TriageStation() {
                     type="number"
                     placeholder="99"
                     required
-                    className="w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
+                    className="text-black w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500"
                     value={vitals.oxygen_level}
                     onChange={(e) =>
                       setVitals({ ...vitals, oxygen_level: e.target.value })

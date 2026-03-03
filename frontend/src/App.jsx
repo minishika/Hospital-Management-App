@@ -5,6 +5,18 @@ import emergency from "./assets/emergency.jpg";
 import home from "./assets/home.jpg";
 import walk from "./assets/walkway.jpg";
 import hospital from "./assets/Untitled.png";
+import appt from "./assets/appointment.png";
+import trg from "./assets/triage.png";
+import hom from "./assets/home.png";
+import phar from "./assets/pharmacy.png";
+import bill from "./assets/bill.png";
+import reg from "./assets/register.png";
+import mycon from "./assets/myconsloe.png";
+import schedule from "./assets/calendar.png";
+import logout from "./assets/switch.png";
+import ser from "./assets/service.png";
+import exp from "./assets/experts.png";
+import thu from "./assets/thunder.png";
 import TriageStation from "./components/TriageStation";
 import DoctorDashboard from "./components/DoctorDashboard";
 // import Login from "../Login/Login"; // Ensure you are using the embedded login below or the component
@@ -33,6 +45,12 @@ function App() {
     wait_time_mins: 0,
   });
   const [bookingMessage, setBookingMessage] = useState("");
+
+  //Doctor Shedule
+  const [doctorSchedule, setDoctorSchedule] = useState([]);
+
+  //nurse Shedule
+  const [nurseSchedule, setNurseSchedule] = useState([]);
 
   // Login State
   const [loginData, setLoginData] = useState({ username: "", password: "" });
@@ -63,6 +81,29 @@ function App() {
 
     return () => clearInterval(slideInterval); // Cleanup on unmount
   }, []);
+
+  //Doctor Schedule Loading
+
+  const loadDoctorSchedule = async () => {
+    try {
+      const response = await axios.get(
+        `${API_URL}/doctor/${currentUser.id}/appointments`,
+      );
+      setDoctorSchedule(response.data);
+    } catch (error) {
+      console.error("Error loading schedule", error);
+    }
+  };
+
+  //Nurse Schedule Loading
+  const loadNurseSchedule = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/nurse/appointments`);
+      setNurseSchedule(response.data);
+    } catch (error) {
+      console.error("Error loading nurse schedule", error);
+    }
+  };
 
   // --- HANDLERS ---
   const handleLoginSubmit = async (e) => {
@@ -122,7 +163,9 @@ function App() {
         `${API_URL}/book-appointment/`,
         patientData,
       );
-      setBookingMessage(`Success! Token ID: #${response.data.appointment_id}`);
+      setBookingMessage(
+        `Success! Token ID: #${response.data.appointment_id} | Time: ${response.data.appointment_time}`,
+      );
       setPatientData({ ...patientData, patient_name: "", wait_time_mins: 0 });
       setTimeout(() => setBookingMessage(""), 5000);
     } catch (error) {
@@ -159,7 +202,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
+    <div className="min-h-screen bg-linear-to-br from-slate-950 via-slate-900 to-slate-800 text-gray-200 font-sans">
       {/* TOP NAVIGATION HEADER */}
       <nav className="bg-slate-900 text-white shadow-lg sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -187,13 +230,14 @@ function App() {
               {/* Home is visible to everyone */}
               <button
                 onClick={() => setView("home")}
-                className={`px-4 py-2 rounded-md font-medium transition ${
+                className={`px-4 py-2 flex hover:scale-110 transition duration-250 rounded-md cursor-pointer font-medium ${
                   view === "home"
-                    ? "bg-blue-600 text-white"
-                    : "hover:bg-slate-700 text-gray-200"
+                    ? "bg-purple-600 text-white"
+                    : "hover:bg-purple-600 text-gray-200"
                 }`}
               >
-                🏠 Home
+                <img src={hom} className="w-6 h-6 mr-2" />
+                Home
               </button>
 
               {/* Public or Admin/Receptionist can see Register */}
@@ -203,13 +247,14 @@ function App() {
                 currentUser?.role === "Nurse") && (
                 <button
                   onClick={() => setView("patient")}
-                  className={`px-4 py-2 rounded-md font-medium transition ${
+                  className={`px-4 py-2 flex hover:scale-110 cursor-pointer transition duration-250 rounded-md font-medium ${
                     view === "patient"
-                      ? "bg-blue-600 text-white"
-                      : "hover:bg-slate-700 text-gray-200"
+                      ? "bg-purple-600 text-white"
+                      : "hover:bg-purple-600 text-gray-200"
                   }`}
                 >
-                  🩺 Register
+                  <img src={reg} className="w-6 h-6 mr-2" />
+                  Register
                 </button>
               )}
 
@@ -218,16 +263,36 @@ function App() {
                 <>
                   {/* DOCTORS ONLY */}
                   {currentUser.role === "Doctor" && (
-                    <button
-                      onClick={() => setView("doctor")}
-                      className={`px-4 py-2 rounded-md font-medium transition ${
-                        view === "doctor"
-                          ? "bg-blue-600 text-white"
-                          : "hover:bg-slate-700 text-gray-200"
-                      }`}
-                    >
-                      👨‍⚕️ My Console
-                    </button>
+                    <>
+                      <button
+                        onClick={() => setView("doctor")}
+                        className={`px-4 py-2 rounded-md flex hover:scale-110 transition duration-250 cursor-pointer font-medium ${
+                          view === "doctor"
+                            ? "bg-purple-600 text-white"
+                            : "hover:bg-purple-600 text-gray-200"
+                        }`}
+                      >
+                        {" "}
+                        <img src={mycon} className="w-6 h-6 mr-2" />
+                        My Console
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setView("doctorSchedule");
+                          loadDoctorSchedule();
+                        }}
+                        className={`px-4 py-2 flex hover:scale-110 cursor-pointer transition duration-250 rounded-md font-medium ${
+                          view === "doctorSchedule"
+                            ? "bg-purple-600 text-white"
+                            : "hover:bg-purple-600 text-gray-200"
+                        }`}
+                      >
+                        {" "}
+                        <img src={schedule} className="w-6 h-6 mr-2" />
+                        My Schedule
+                      </button>
+                    </>
                   )}
 
                   {/* PHARMACISTS ONLY */}
@@ -239,9 +304,10 @@ function App() {
                         setView("pharmacy");
                         loadPharmacy();
                       }}
-                      className={`px-4 py-2 rounded-md font-medium ${view === "pharmacy" ? "bg-blue-600" : "hover:bg-slate-700"}`}
+                      className={`px-4 py-2 rounded-md flex hover:scale-110 transition duration-250 font-medium ${view === "pharmacy" ? "bg-purple-600" : "hover:bg-purple-600"}`}
                     >
-                      💊 Pharmacy
+                      <img src={phar} className="w-6 h-6 mr-2" />
+                      Pharmacy
                     </button>
                   )}
 
@@ -254,24 +320,43 @@ function App() {
                         setView("billing");
                         loadBills();
                       }}
-                      className={`px-4 py-2 rounded-md font-medium ${view === "billing" ? "bg-blue-600" : "hover:bg-slate-700"}`}
+                      className={`px-4 py-2 rounded-md flex hover:scale-110 transition duration-250 font-medium ${view === "billing" ? "bg-purple-600" : "hover:bg-purple-600"}`}
                     >
-                      💳 Billing
+                      <img src={bill} className="w-6 h-6 mr-2" />
+                      Billing
                     </button>
                   )}
 
                   {/* NURSES ONLY */}
                   {currentUser.role === "Nurse" && (
-                    <button
-                      onClick={() => setView("triage")}
-                      className={`px-4 py-2 rounded-md font-medium transition ${
-                        view === "triage"
-                          ? "bg-blue-600 text-white"
-                          : "hover:bg-slate-700 text-gray-200"
-                      }`}
-                    >
-                      🌡️ Triage
-                    </button>
+                    <>
+                      <button
+                        onClick={() => setView("triage")}
+                        className={`px-4 py-2 flex rounded-md hover:scale-110 font-medium transition duration-250 ${
+                          view === "triage"
+                            ? "bg-purple-600 text-white"
+                            : "hover:bg-purple-600 text-gray-200"
+                        }`}
+                      >
+                        <img src={trg} className="w-6 h-6 mr-2" />
+                        Triage
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setView("nurseSchedule");
+                          loadNurseSchedule();
+                        }}
+                        className={`px-4 py-2 flex rounded-md ${
+                          view === "nurseSchedule"
+                            ? "bg-purple-600"
+                            : "hover:bg-purple-600"
+                        }`}
+                      >
+                        <img src={appt} className="w-6 h-6 mr-2" />
+                        Appointments
+                      </button>
+                    </>
                   )}
 
                   {currentUser.role === "Doctor" && (
@@ -282,9 +367,13 @@ function App() {
                       </span>
                       <button
                         onClick={handleLogout}
-                        className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-md text-sm font-bold transition text-white shadow-md"
+                        className="bg-red-600 hover:bg-red-700 hover:scale-110 px-4 py-2 rounded-md text-sm flex font-bold transition duration-250 cursor-pointer text-white shadow-md"
                       >
                         Logout
+                        <img
+                          src={logout}
+                          className="w-4 h-4 ml-2 inline-block"
+                        />
                       </button>
                     </div>
                   )}
@@ -299,22 +388,28 @@ function App() {
                         view === "admin" ? "bg-blue-600" : "hover:bg-slate-700"
                       }`}
                     >
-                      📊 Admin Panel
+                      Admin Panel
                     </button>
                   )}
 
                   {/* LOGGED IN USER INFO TRAY */}
                   {currentUser.role === "Nurse" && (
                     <div className="flex items-center ml-6 border-l border-slate-600 pl-6">
-                      <span className="text-gray-300 mr-2">Logged in as:</span>
+                      <span className="text-gray-300 mr-2 text-sm">
+                        Logged in as:
+                      </span>
                       <span className="text-green-400 font-bold mr-4">
                         Nurse
                       </span>
                       <button
                         onClick={handleLogout}
-                        className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-md text-sm font-bold transition text-white shadow-md"
+                        className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-md flex hover:scale-110 transition duration-250 text-sm font-bold text-white shadow-md"
                       >
                         Logout
+                        <img
+                          src={logout}
+                          className="w-6 h-6 mx-2 inline-block"
+                        />
                       </button>
                     </div>
                   )}
@@ -339,7 +434,7 @@ function App() {
         {/* VIEW 0: HOME */}
         {view === "home" && (
           <div className="space-y-12">
-            <div className="relative rounded-3xl overflow-hidden shadow-2xl h-[70vh] min-h-[500px] flex items-center justify-center">
+            <div className="relative rounded-3xl overflow-hidden shadow-2xl h-[70vh] min-h-125 flex items-center justify-center">
               <div
                 className="absolute inset-0 flex transition-transform duration-1000 ease-in-out z-0"
                 style={{ transform: `translateX(-${currentSlide * 100}%)` }}
@@ -349,7 +444,7 @@ function App() {
                     key={index}
                     src={img}
                     alt={`Slide ${index}`}
-                    className="w-full h-full flex-shrink-0 object-cover"
+                    className="w-full h-full shrink-0 object-cover"
                   />
                 ))}
               </div>
@@ -369,7 +464,7 @@ function App() {
                 </p>
                 <button
                   onClick={() => setView("patient")}
-                  className="bg-yellow-500 text-slate-900 font-bold text-lg px-8 py-3 rounded-md shadow-lg hover:bg-yellow-400 transition transform hover:scale-105"
+                  className="bg-yellow-500 text-slate-900 font-bold text-lg px-8 py-3 rounded-md shadow-lg hover:bg-yellow-400 transition transform duration-200 hover:scale-105 cursor-pointer"
                 >
                   Book an Appointment
                 </button>
@@ -378,30 +473,32 @@ function App() {
 
             {/* About & Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center mt-12">
-              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 transition hover:shadow-md">
-                <div className="text-4xl mb-3">🚑</div>
-                <h3 className="text-xl font-bold text-gray-800">
-                  24/7 Emergency
-                </h3>
-                <p className="text-gray-500 mt-2">
+              <div className="bg-slate-900/70 hover:scale-110 hover:bg-orange-900/25 hover:shadow-orange-300/50 hover:shadow-2xl backdrop-blur-lg border border-slate-700 p-6 rounded-xl shadow-sm transition duration-250 cursor-pointer">
+                <div className="text-4xl mb-3 flex justify-center">
+                  <img src={ser} className="w-25" />
+                </div>
+                <h3 className="text-xl font-bold text-white">24/7 Emergency</h3>
+                <p className="text-orange-500 mt-2">
                   Always ready to handle critical care situations.
                 </p>
               </div>
-              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 transition hover:shadow-md">
-                <div className="text-4xl mb-3">👨‍⚕️</div>
-                <h3 className="text-xl font-bold text-gray-800">
+              <div className="bg-slate-900/70 hover:scale-110 hover:bg-orange-900/25 hover:shadow-orange-300/50 hover:shadow-2xl backdrop-blur-lg border border-slate-700 p-6 rounded-xl shadow-sm transition duration-250 cursor-pointer">
+                <div className="text-4xl mb-3 flex justify-center">
+                  <img src={exp} className="w-25" />
+                </div>
+                <h3 className="text-xl font-bold text-white">
                   Expert Specialists
                 </h3>
-                <p className="text-gray-500 mt-2">
+                <p className="text-orange-500 mt-2">
                   Top-tier medical professionals.
                 </p>
               </div>
-              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 transition hover:shadow-md">
-                <div className="text-4xl mb-3">⚡</div>
-                <h3 className="text-xl font-bold text-gray-800">
-                  Zero Wait Time
-                </h3>
-                <p className="text-gray-500 mt-2">
+              <div className="bg-slate-900/70 backdrop-blur-lg border hover:bg-orange-900/25 hover:shadow-orange-300/50 hover:shadow-2xl cursor-pointer border-slate-700 p-6 rounded-xl shadow-sm hover:scale-110 transition duration-300">
+                <div className="text-4xl mb-3 flex justify-center">
+                  <img src={thu} className="w-25" />
+                </div>
+                <h3 className="text-xl font-bold text-white">Zero Wait Time</h3>
+                <p className="text-orange-500 mt-2">
                   Smart Queue algorithm ensures you are seen on time.
                 </p>
               </div>
@@ -409,7 +506,7 @@ function App() {
 
             {/* Departments Grid */}
             <div>
-              <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">
+              <h2 className="text-3xl font-bold text-white mb-6 text-center">
                 Our Departments & Doctors
               </h2>
               {doctorsList.length === 0 ? (
@@ -421,12 +518,12 @@ function App() {
                   {doctorsList.map((doc) => (
                     <div
                       key={doc.id}
-                      className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 text-center hover:shadow-md transition"
+                      className="bg-slate-900/70 backdrop-blur-lg border border-slate-700 p-4 rounded-lg shadow-sm text-center hover:shadow-md transition hover:bg-violet-400/30 cursor-pointer hover:scale-105"
                     >
-                      <p className="font-bold text-slate-800">
+                      <p className="font-bold text-green-400">
                         {doc.department}
                       </p>
-                      <p className="text-sm text-gray-500">{doc.name}</p>
+                      <p className="text-sm text-gray-300">{doc.name}</p>
                     </div>
                   ))}
                 </div>
@@ -435,10 +532,100 @@ function App() {
           </div>
         )}
 
+        {view === "doctorSchedule" && currentUser?.role === "Doctor" && (
+          <div>
+            <h2 className="text-3xl font-bold mb-6">Today's Appointments</h2>
+
+            {doctorSchedule.length === 0 ? (
+              <p>No appointments scheduled.</p>
+            ) : (
+              <div className="bg-slate-900/70 backdrop-blur-lg border border-slate-700 shadow rounded-lg overflow-hidden">
+                <table className="w-full">
+                  <thead className="bg-slate-900 text-orange-400 border-b border-slate-700">
+                    <tr className="hover:bg-slate-800/60 transition">
+                      <th className="py-3 px-6 text-left">Patient</th>
+                      <th className="py-3 px-6 text-center">Time</th>
+                      <th className="py-3 px-6 text-center">Urgency</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {doctorSchedule.map((item, index) => (
+                      <tr
+                        key={index}
+                        className="hover:bg-slate-800/60 transition border-b"
+                      >
+                        <td className="py-3 px-6 text-left">
+                          {item.patient_name}
+                        </td>
+                        <td className="py-3 px-6 font-semibold text-purple-600 text-center">
+                          {item.appointment_time}
+                        </td>
+                        <td className="py-3 px-6 text-center">
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-bold ${
+                              item.urgency_level === "Emergency"
+                                ? "bg-red-100 text-red-700"
+                                : item.urgency_level === "Moderate"
+                                  ? "bg-yellow-100 text-yellow-700"
+                                  : "bg-green-100 text-green-700"
+                            }`}
+                          >
+                            {item.urgency_level}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {view === "nurseSchedule" && currentUser?.role === "Nurse" && (
+          <div>
+            <h2 className="text-3xl font-bold mb-6">All Appointments</h2>
+
+            {nurseSchedule.length === 0 ? (
+              <p>No scheduled appointments.</p>
+            ) : (
+              <div className="bg-slate-900/70 backdrop-blur-lg border border-slate-700 shadow rounded-lg overflow-hidden">
+                <table className="w-full">
+                  <thead className="bg-slate-900 text-orange-400 border-b border-slate-700">
+                    <tr className="hover:bg-slate-800/60 text-orange-500 transition border-b">
+                      <th className="py-3 px-6 text-left">Patient</th>
+                      <th className="py-3 px-6 text-center">Doctor</th>
+                      <th className="py-3 px-6 text-center">Time</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {nurseSchedule.map((item, index) => (
+                      <tr
+                        key={index}
+                        className="hover:bg-slate-800/60 transition border-b"
+                      >
+                        <td className="py-3 px-6 text-left">
+                          {item.patient_name}
+                        </td>
+                        <td className="py-3 px-6 text-center">
+                          {item.doctor_name}
+                        </td>
+                        <td className="py-3 px-6 font-semibold text-purple-600 text-center">
+                          {item.appointment_time}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* VIEW 0.5: LOGIN */}
         {view === "login" && (
-          <div className="max-w-md mx-auto mt-10 bg-white p-8 rounded-xl shadow-lg border border-gray-100">
-            <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
+          <div className="max-w-md mx-auto mt-10  p-8 rounded-xl shadow-lg border border-slate-700 bg-slate-900/70 backdrop-blur-lg">
+            <h2 className="text-2xl font-bold text-center text-gray-200 mb-6">
               Staff Secure Portal
             </h2>
             {loginError && (
@@ -489,7 +676,7 @@ function App() {
         {/* VIEW 1: REGISTRATION */}
         {view === "patient" && (
           <div className="max-w-2xl mx-auto">
-            <h2 className="text-3xl font-bold text-gray-800 mb-6">
+            <h2 className="text-3xl font-bold text-white mb-6">
               Register New Patient
             </h2>
             {bookingMessage && (
@@ -497,7 +684,7 @@ function App() {
                 {bookingMessage}
               </div>
             )}
-            <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+            <div className="bg-slate-900/70 backdrop-blur-lg rounded-xl shadow-md p-6 border border-slate-700">
               <form onSubmit={handleBookPatient} className="space-y-5">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -564,7 +751,7 @@ function App() {
                 </div>
                 <button
                   type="submit"
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition"
+                  className="w-full bg-slate-800 border border-slate-700 p-3 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white font-bold py-3 rounded-lg transition"
                 >
                   Add to Queue
                 </button>
@@ -584,9 +771,7 @@ function App() {
             currentUser?.role === "Nurse") && (
             <div>
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-3xl font-bold text-gray-800">
-                  Pharmacy Hub
-                </h2>
+                <h2 className="text-3xl font-bold text-white">Pharmacy Hub</h2>
                 <button
                   className="border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white font-semibold py-2 px-4 rounded-lg transition"
                   onClick={loadPharmacy}
@@ -601,10 +786,10 @@ function App() {
                   prescriptions.map((script) => (
                     <div
                       key={script.record_id}
-                      className="bg-white p-6 rounded-xl shadow-md border-l-4 border-blue-500"
+                      className="bg-slate-900/70 backdrop-blur-lg p-6 rounded-xl shadow-md border-l-4 border-purple-500"
                     >
                       <div className="flex justify-between items-start mb-4">
-                        <h3 className="text-xl font-bold text-gray-800">
+                        <h3 className="text-xl font-bold text-white">
                           {script.patient_name}
                         </h3>
                         <span className="text-sm text-gray-500">
@@ -612,18 +797,18 @@ function App() {
                         </span>
                       </div>
                       <div className="mb-4">
-                        <p className="text-sm text-gray-500 uppercase font-semibold">
+                        <p className="text-sm text-green-500 uppercase font-semibold">
                           Diagnosis
                         </p>
-                        <p className="bg-gray-50 p-2 rounded mt-1 border">
+                        <p className="bg-gray-700 text-white p-2 rounded mt-1 border border-gray-500 font-mono text-sm whitespace-pre-wrap">
                           {script.diagnosis}
                         </p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500 uppercase font-semibold">
+                        <p className="text-sm text-red-500 uppercase font-semibold">
                           Prescribed
                         </p>
-                        <p className="bg-blue-50 p-3 rounded mt-1 border border-blue-100 font-mono text-sm whitespace-pre-wrap">
+                        <p className="bg-gray-700 p-3 rounded mt-1 border border-gray-500 font-mono text-sm text-white whitespace-pre-wrap">
                           {script.prescription}
                         </p>
                       </div>
@@ -641,7 +826,7 @@ function App() {
             currentUser?.role === "Nurse") && (
             <div>
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-3xl font-bold text-gray-800">
+                <h2 className="text-3xl font-bold text-white">
                   Billing & Finance
                 </h2>
                 <button
@@ -651,10 +836,10 @@ function App() {
                   🔄 Refresh
                 </button>
               </div>
-              <div className="bg-white rounded-xl shadow-md overflow-hidden">
+              <div className="bg-slate-900/70 backdrop-blur-lg border border-slate-700 rounded-xl shadow-md overflow-hidden">
                 <table className="w-full text-left border-collapse">
-                  <thead className="bg-slate-800 text-white">
-                    <tr>
+                  <thead className="bg-slate-900 text-blue-400 border-b border-slate-700">
+                    <tr className="hover:bg-slate-800/60 transition">
                       <th className="py-4 px-6 font-semibold text-sm">
                         Invoice ID
                       </th>
@@ -672,7 +857,7 @@ function App() {
                   </thead>
                   <tbody className="divide-y divide-gray-200">
                     {bills.length === 0 ? (
-                      <tr>
+                      <tr className="hover:bg-slate-800/60 transition">
                         <td
                           colSpan="5"
                           className="py-8 text-center text-gray-500"
@@ -682,7 +867,10 @@ function App() {
                       </tr>
                     ) : (
                       bills.map((bill) => (
-                        <tr key={bill.bill_id} className="hover:bg-gray-50">
+                        <tr
+                          key={bill.bill_id}
+                          className="hover:bg-slate-800/60 transition"
+                        >
                           <td className="py-4 px-6 font-bold">
                             INV-{1000 + bill.bill_id}
                           </td>
@@ -704,7 +892,7 @@ function App() {
                           <td className="py-4 px-6">
                             {bill.payment_status === "Unpaid" ? (
                               <button
-                                className="bg-blue-600 hover:bg-blue-700 text-white py-1 px-4 rounded-md transition shadow-sm"
+                                className="bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-900/40 text-white py-1 px-4 rounded-md transition shadow-sm"
                                 onClick={() => handlePayment(bill.bill_id)}
                               >
                                 Pay
@@ -730,7 +918,7 @@ function App() {
         {view === "admin" && currentUser?.role === "Admin" && (
           <div>
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-3xl font-bold text-gray-800">
+              <h2 className="text-3xl font-bold text-white">
                 Admin – Full Patient History
               </h2>
               <button
@@ -741,10 +929,10 @@ function App() {
               </button>
             </div>
 
-            <div className="bg-white rounded-xl shadow-md overflow-hidden">
+            <div className="bg-slate-900/70 backdrop-blur-lg rounded-xl shadow-md overflow-hidden">
               <table className="w-full text-left border-collapse">
-                <thead className="bg-slate-800 text-white">
-                  <tr>
+                <thead className="bg-slate-900 text-blue-400 border-b border-slate-700">
+                  <tr className="hover:bg-slate-800/60 transition">
                     <th className="py-4 px-6">ID</th>
                     <th className="py-4 px-6">Timeline</th>
                     <th className="py-4 px-6">Patient</th>
@@ -758,7 +946,7 @@ function App() {
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {adminHistory.length === 0 ? (
-                    <tr>
+                    <tr className="hover:bg-slate-800/60 transition">
                       <td
                         colSpan="8"
                         className="py-8 text-center text-gray-500"
@@ -768,7 +956,10 @@ function App() {
                     </tr>
                   ) : (
                     adminHistory.map((item) => (
-                      <tr key={item.appointment_id}>
+                      <tr
+                        className="hover:bg-slate-800/60 transition"
+                        key={item.appointment_id}
+                      >
                         <td className="py-4 px-6 font-bold">
                           #{item.appointment_id}
                         </td>
