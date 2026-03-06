@@ -913,7 +913,7 @@ function App() {
                           </td>
                           <td className="py-4 px-6">{bill.patient_name}</td>
                           <td className="py-4 px-6 font-bold">
-                            ${bill.total_amount}
+                            ₹{bill.total_amount}
                           </td>
                           <td className="py-4 px-6">
                             <span
@@ -1018,7 +1018,7 @@ function App() {
                         <td className="py-4 px-6">{item.status}</td>
                         <td className="py-4 px-6">{item.diagnosis || "—"}</td>
                         <td className="py-4 px-6">
-                          {item.bill_total ? `$${item.bill_total}` : "—"}
+                          {item.bill_total ? `₹${item.bill_total}` : "—"}
                         </td>
                         <td className="py-4 px-6">
                           {item.payment_status || "—"}
