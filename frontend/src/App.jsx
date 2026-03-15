@@ -585,44 +585,56 @@ function App() {
         )}
 
         {view === "nurseSchedule" && currentUser?.role === "Nurse" && (
-          <div>
-            <h2 className="text-3xl font-bold mb-6">All Appointments</h2>
+  <div>
+    <h2 className="text-3xl font-bold mb-6">All Appointments</h2>
 
-            {nurseSchedule.length === 0 ? (
-              <p>No scheduled appointments.</p>
-            ) : (
-              <div className="bg-slate-900/70 backdrop-blur-lg border border-slate-700 shadow rounded-lg overflow-hidden">
-                <table className="w-full">
-                  <thead className="bg-slate-900 text-orange-400 border-b border-slate-700">
-                    <tr className="hover:bg-slate-800/60 text-orange-500 transition border-b">
-                      <th className="py-3 px-6 text-left">Patient</th>
-                      <th className="py-3 px-6 text-center">Doctor</th>
-                      <th className="py-3 px-6 text-center">Time</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {nurseSchedule.map((item, index) => (
-                      <tr
-                        key={index}
-                        className="hover:bg-slate-800/60 transition border-b"
-                      >
-                        <td className="py-3 px-6 text-left">
-                          {item.patient_name}
-                        </td>
-                        <td className="py-3 px-6 text-center">
-                          {item.doctor_name}
-                        </td>
-                        <td className="py-3 px-6 font-semibold text-purple-600 text-center">
-                          {item.appointment_time}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
+    {nurseSchedule.length === 0 ? (
+      <p>No scheduled appointments.</p>
+    ) : (
+      <div className="bg-slate-900/70 backdrop-blur-lg border border-slate-700 shadow rounded-lg overflow-hidden">
+        <table className="w-full">
+          <thead className="bg-slate-900 text-orange-400 border-b border-slate-700">
+            <tr className="hover:bg-slate-800/60 text-orange-500 transition border-b">
+              <th className="py-3 px-6 text-left">Patient</th>
+              <th className="py-3 px-6 text-center">Doctor</th>
+              <th className="py-3 px-6 text-center">Time</th>
+              {/* Added Urgency Header */}
+              <th className="py-3 px-6 text-center">Urgency</th> 
+            </tr>
+          </thead>
+          <tbody>
+            {nurseSchedule.map((item, index) => (
+              <tr
+                key={index}
+                className="hover:bg-slate-800/60 transition border-b"
+              >
+                <td className="py-3 px-6 text-left">
+                  {item.patient_name}
+                </td>
+                <td className="py-3 px-6 text-center">
+                  {item.doctor_name}
+                </td>
+                <td className="py-3 px-6 font-semibold text-purple-600 text-center">
+                  {item.appointment_time}
+                </td>
+                {/* Added Urgency Data Cell */}
+                <td className="py-3 px-6 text-center font-medium">
+                  <span className={`px-2 py-1 rounded-full text-xs ${
+                    item.urgency_level === 'High' ? 'bg-red-500/20 text-red-400' : 
+                    item.urgency_level === 'Medium' ? 'bg-yellow-500/20 text-yellow-400' : 
+                    'bg-green-500/20 text-green-400'
+                  }`}>
+                    {item.urgency_level}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )}
+  </div>
+)}
 
         {/* VIEW 0.5: LOGIN */}
         {view === "login" && (

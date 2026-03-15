@@ -219,14 +219,18 @@ def allocate_appointment_time(db, doctor_id, urgency):
 
     # Emergency
     if urgency == 5:
-        return slot_time
+        pass # Keep slot_time as is
 
     # Intermediate
-    if urgency == 3:
-        return slot_time + timedelta(minutes=15)
+    elif urgency == 3:
+        slot_time = slot_time + timedelta(minutes=15)
 
     # Routine
-    return slot_time + timedelta(minutes=30)
+    else:
+        slot_time = slot_time + timedelta(minutes=30)
+        
+    # CRITICAL FIX: Convert the final IST time back to UTC before saving!
+    return slot_time.astimezone(timezone.utc)
 
 def get_urgency_label(level: int):
     mapping = {
@@ -478,15 +482,19 @@ def nurse_schedule(db: Session = Depends(get_db)):
         .all()
     )
 
-    return [
-        {
+    result = []
+    for a, doctor in appts:
+        # Helper to safely convert SQLite time to IST
+        appt_time = a.appointment_time.replace(tzinfo=timezone.utc).astimezone(ist) if a.appointment_time else None
+
+        result.append({
             "patient_name": a.patient_name,
-            "appointment_time": a.appointment_time.astimezone(ist).strftime("%Y-%m-%d %I:%M %p") if a.appointment_time else None,
+            "appointment_time": appt_time.strftime("%Y-%m-%d %I:%M %p") if appt_time else "—",
             "doctor_name": doctor.name,
             "urgency_level": get_urgency_label(a.urgency_level)
-        }
-        for a, doctor in appts
-    ]
+        })
+        
+    return result
 
 @app.get("/doctor/{doc_id}/appointments")
 def doctor_schedule(doc_id: int, db: Session = Depends(get_db)):
