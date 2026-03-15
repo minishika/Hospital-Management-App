@@ -148,7 +148,7 @@ export default function DoctorDashboard({ doctorId, showSchedule }) {
                     className="hover:bg-stone-700 text-gray-300"
                   >
                     <td className="py-4 px-6 font-bold text-red-500">
-                      #{p.appointment_id}
+                      #{p.token_number}
                     </td>
                     <td className="py-4 px-6 text-purple-700 font-bold">
                       {p.patient_name}

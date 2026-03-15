@@ -370,6 +370,7 @@ def admin_full_history(db: Session = Depends(get_db)):
 
         result.append({
             "appointment_id": a.id,
+            "token_number": a.token_number,
             "patient_name": a.patient_name,
             "doctor_name": doctor.name,
             "department": doctor.department,
@@ -416,13 +417,12 @@ def book_appointment(appt: AppointmentCreate, db: Session = Depends(get_db)):
 
     # 6️⃣ Token generation
     ist = ZoneInfo("Asia/Kolkata")
-    today_start = datetime.now(ist).replace(hour=0, minute=0, second=0, microsecond=0)
+    today_start = datetime.now(ist).replace(hour=0, minute=0, second=0, microsecond=0).astimezone(timezone.utc)
 
     dept_count = (
         db.query(Appointment)
-        .join(User, Appointment.doctor_id == User.id)
         .filter(
-            User.department == doctor.department,
+            Appointment.doctor_id == appt.doctor_id, 
             Appointment.created_at >= today_start
         )
         .count()
@@ -438,7 +438,7 @@ def book_appointment(appt: AppointmentCreate, db: Session = Depends(get_db)):
         urgency_level=urgency_level,
         wait_time_mins=appt.wait_time_mins,
         appointment_time=allocated_time,
-        token_number=new_token
+        token_number=new_token # Make sure 'token_number' exists in your models.py!
     )
 
     db.add(new_appt)
@@ -446,6 +446,9 @@ def book_appointment(appt: AppointmentCreate, db: Session = Depends(get_db)):
     db.refresh(new_appt)
 
     urgency_label = get_urgency_label(urgency_level)
+    
+    # 🔥 FIX 2: Convert UTC back to IST just for the SMS message text
+    allocated_time_ist = allocated_time.astimezone(ist)
 
     message = f"""
 CityCare Hospital
@@ -453,7 +456,7 @@ Department: {doctor.department}
 Doctor: {doctor.name}
 Token No: {new_token}
 Urgency: {urgency_label}
-Time: {allocated_time.strftime("%Y-%m-%d %I:%M %p")}
+Time: {allocated_time_ist.strftime("%Y-%m-%d %I:%M %p")}
 """
 
     try:
@@ -467,7 +470,7 @@ Time: {allocated_time.strftime("%Y-%m-%d %I:%M %p")}
         "appointment_id": new_appt.id,
         "token_number": new_token,
         "department": doctor.department,
-        "appointment_time": allocated_time.astimezone(ist).strftime("%Y-%m-%d %I:%M %p")
+        "appointment_time": allocated_time_ist.strftime("%Y-%m-%d %I:%M %p")
     }
 
 @app.get("/nurse/appointments")
@@ -566,6 +569,7 @@ def get_doctor_queue(doc_id: int, db: Session = Depends(get_db)):
     for _, appt, vitals in prioritized:
         result.append({
             "appointment_id": appt.id,
+            "token_number": appt.token_number,
             "patient_name": appt.patient_name,
             "urgency_level": appt.urgency_level,
             "status": appt.status,

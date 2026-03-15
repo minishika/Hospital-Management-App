@@ -5,9 +5,12 @@ services:
     build: ./backend
     ports:
       - "8000:8000"
-    # This automatically loads your Twilio/DB secrets into the container
     env_file:
       - ./backend/.env
+    # 🔥 THE MAGIC FIX: This maps your local folder to the container
+    # Assuming your backend Dockerfile uses 'WORKDIR /app'
+    volumes:
+      - ./backend:/app
     restart: always
 
   frontend:
