@@ -9,6 +9,7 @@ from zoneinfo import ZoneInfo
 import os
 from dotenv import load_dotenv
 from twilio.rest import Client
+from sqlalchemy import create_engine
 import pytz
 import heapq
 
@@ -20,12 +21,18 @@ twilio_phone = os.getenv("TWILIO_PHONE")
 
 client = Client(account_sid, auth_token)
 
-# --- 1. DATABASE SETUP ---
 SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./hospital.db")
 
+# 1. Fix Render's default postgres:// prefix so SQLAlchemy doesn't crash
+if SQLALCHEMY_DATABASE_URL.startswith("postgres://"):
+    SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+# 2. Create the engine correctly based on which database is being used
 if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
+    # Local SQLite setup
     engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
 else:
+    # Render PostgreSQL setup (does not need the thread check)
     engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
