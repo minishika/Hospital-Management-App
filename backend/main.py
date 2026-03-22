@@ -310,7 +310,7 @@ class ConsultationData(BaseModel):
     symptoms: str
     diagnosis: str
     prescription: str
-    medicine_cost: float
+    
 
 class LoginRequest(BaseModel):
     username: str
@@ -385,6 +385,32 @@ def admin_full_history(db: Session = Depends(get_db)):
                 "registered_date": reg_date.strftime("%Y-%m-%d %I:%M %p") if reg_date else "—",
                 "dismissed_date": diss_date.strftime("%Y-%m-%d %I:%M %p") if diss_date else "—"
             }
+        })
+    return result
+
+@app.get("/billing/unpaid")
+def get_unpaid_bills(db: Session = Depends(get_db)):
+    # Join multiple tables so the frontend gets the names and prescriptions
+    data = db.query(
+        Bill,
+        Appointment,
+        User,
+        MedicalRecord
+    )\
+    .join(Appointment, Bill.appointment_id == Appointment.id)\
+    .join(User, Appointment.doctor_id == User.id)\
+    .outerjoin(MedicalRecord, Appointment.id == MedicalRecord.appointment_id)\
+    .filter(Bill.payment_status == "Unpaid")\
+    .all()
+
+    result = []
+    for b, a, doctor, m in data:
+        result.append({
+            "id": b.id,
+            "patient_name": a.patient_name,
+            "doctor_name": doctor.name,
+            "prescription": m.prescription if m else "No prescription",
+            "bill_total": b.total_amount
         })
     return result
 
@@ -475,6 +501,49 @@ Time: {allocated_time_ist.strftime("%Y-%m-%d %I:%M %p")}
         "department": doctor.department,
         "appointment_time": allocated_time_ist.strftime("%Y-%m-%d %I:%M %p")
     }
+
+class PharmacyBillData(BaseModel):
+    medicine_cost: float
+
+@app.get("/pharmacy/pending")
+def get_pending_pharmacy(db: Session = Depends(get_db)):
+    # Find appointments that are waiting for the pharmacy
+    data = db.query(Appointment, User, MedicalRecord)\
+        .join(User, Appointment.doctor_id == User.id)\
+        .join(MedicalRecord, Appointment.id == MedicalRecord.appointment_id)\
+        .filter(Appointment.status == "Pending Pharmacy")\
+        .all()
+    
+    result = []
+    for a, doctor, m in data:
+        result.append({
+            "appointment_id": a.id,
+            "patient_name": a.patient_name,
+            "doctor_name": doctor.name,
+            "prescription": m.prescription if m else "No prescription"
+        })
+    return result
+
+@app.post("/pharmacy/bill_and_pay/{appointment_id}")
+def generate_and_pay_bill(appointment_id: int, data: PharmacyBillData, db: Session = Depends(get_db)):
+    # 1. Create the Bill (Doctor Fee ₹500 + Medicine Cost)
+    total = 500.0 + data.medicine_cost
+    new_bill = Bill(
+        appointment_id=appointment_id,
+        medicine_fee=data.medicine_cost,
+        total_amount=total,
+        payment_status="Paid",
+        paid_at=datetime.now(timezone.utc)
+    )
+    db.add(new_bill)
+    
+    # 2. Update Appointment status to fully Completed
+    appt = db.query(Appointment).filter(Appointment.id == appointment_id).first()
+    if appt:
+        appt.status = "Completed"
+        
+    db.commit()
+    return {"message": f"Bill of ₹{total} generated and paid successfully!"}
 
 @app.get("/nurse/appointments")
 def nurse_schedule(db: Session = Depends(get_db)):
@@ -705,13 +774,15 @@ def compare_models(doc_id: int, db: Session = Depends(get_db)):
 @app.post("/attend-patient/{appointment_id}")
 def attend_patient(appointment_id: int, data: ConsultationData, db: Session = Depends(get_db)):
 
+    # 1. Fetch the appointment
     appt = db.query(Appointment).filter(Appointment.id == appointment_id).first()
-
     if not appt:
         raise HTTPException(status_code=404, detail="Appointment not found")
 
-    appt.status = "Completed"
+    # 2. Change status to send them to the Pharmacy Queue!
+    appt.status = "Pending Pharmacy"
 
+    # 3. Save the Medical Record (No medicine_cost needed here!)
     record = MedicalRecord(
         appointment_id=appointment_id,
         symptoms=data.symptoms,
@@ -720,17 +791,10 @@ def attend_patient(appointment_id: int, data: ConsultationData, db: Session = De
     )
     db.add(record)
 
-    total = 500.0 + data.medicine_cost
-    new_bill = Bill(
-        appointment_id=appointment_id,
-        medicine_fee=data.medicine_cost,
-        total_amount=total
-    )
-    db.add(new_bill)
-
+    # 4. Commit changes (Notice we deleted the entire Bill creation section)
     db.commit()
 
-    return {"message": "Consultation complete."}
+    return {"message": "Consultation complete. Patient sent to Pharmacy."}
 
 @app.get("/pharmacy/prescriptions")
 def get_prescriptions(db: Session = Depends(get_db)):
