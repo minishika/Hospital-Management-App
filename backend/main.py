@@ -14,7 +14,6 @@ import pytz
 import heapq
 
 load_dotenv()
-
 account_sid = os.getenv("TWILIO_ACCOUNT_SID")
 auth_token = os.getenv("TWILIO_AUTH_TOKEN")
 twilio_phone = os.getenv("TWILIO_PHONE")
@@ -263,6 +262,10 @@ def init_db():
         # Add Triage Nurse
         nurse = User(username="nurse_triage", password="password123", role="Nurse", department="Triage", name="Nurse Joy")
         db.add(nurse)
+
+        # Add Triage Pharmacist
+        pharmacist = User(username="Pharma_triage", password="password123", role="Pharmacist", department="Triage", name="Pharmacist Jane")
+        db.add(pharmacist)
 
         # Add Admin
         admin = User(username="admin", password="admin123", role="Admin", department="Administration", name="System Admin")

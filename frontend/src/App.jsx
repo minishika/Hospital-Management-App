@@ -271,10 +271,9 @@ function App() {
               <button
                 onClick={() => setView("home")}
                 className={`px-4 py-2 flex hover:scale-110 transition duration-250 rounded-md justify-center
-                  cursor-pointer font-medium ${
-                    view === "home"
-                      ? "bg-purple-600 text-white"
-                      : "hover:bg-purple-600 text-gray-200"
+                  cursor-pointer font-medium ${view === "home"
+                    ? "bg-purple-600 text-white"
+                    : "hover:bg-purple-600 text-gray-200"
                   }`}
               >
                 <img src={hom} className="w-6 h-6 mr-2" />
@@ -286,18 +285,17 @@ function App() {
                 currentUser?.role === "Admin" ||
                 currentUser?.role === "Receptionist" ||
                 currentUser?.role === "Nurse") && (
-                <button
-                  onClick={() => setView("patient")}
-                  className={`px-4 py-2 flex hover:scale-110 justify-center cursor-pointer transition duration-250 rounded-md font-medium ${
-                    view === "patient"
-                      ? "bg-purple-600 text-white"
-                      : "hover:bg-purple-600 text-gray-200"
-                  }`}
-                >
-                  <img src={reg} className="w-6 h-6 mr-2" />
-                  Register
-                </button>
-              )}
+                  <button
+                    onClick={() => setView("patient")}
+                    className={`px-4 py-2 flex hover:scale-110 justify-center cursor-pointer transition duration-250 rounded-md font-medium ${view === "patient"
+                        ? "bg-purple-600 text-white"
+                        : "hover:bg-purple-600 text-gray-200"
+                      }`}
+                  >
+                    <img src={reg} className="w-6 h-6 mr-2" />
+                    Register
+                  </button>
+                )}
 
               {/* RESTRICTED PANELS FOR LOGGED IN STAFF */}
               {currentUser && (
@@ -307,11 +305,10 @@ function App() {
                     <>
                       <button
                         onClick={() => setView("doctor")}
-                        className={`px-4 py-2 rounded-md flex hover:scale-110 transition duration-250 cursor-pointer font-medium ${
-                          view === "doctor"
+                        className={`px-4 py-2 rounded-md flex hover:scale-110 transition duration-250 cursor-pointer font-medium ${view === "doctor"
                             ? "bg-purple-600 text-white"
                             : "hover:bg-purple-600 text-gray-200"
-                        }`}
+                          }`}
                       >
                         {" "}
                         <img src={mycon} className="w-6 h-6 mr-2" />
@@ -322,11 +319,10 @@ function App() {
                         onClick={() => {
                           setView("schedule");
                         }}
-                        className={`px-4 py-2 flex hover:scale-110 cursor-pointer transition duration-250 rounded-md font-medium ${
-                          view === "schedule"
+                        className={`px-4 py-2 flex hover:scale-110 cursor-pointer transition duration-250 rounded-md font-medium ${view === "schedule"
                             ? "bg-purple-600 text-white"
                             : "hover:bg-purple-600 text-gray-200"
-                        }`}
+                          }`}
                       >
                         {" "}
                         <img src={schedule} className="w-6 h-6 mr-2" />
@@ -337,8 +333,7 @@ function App() {
 
                   {/* PHARMACISTS ONLY */}
                   {/* PHARMACY: Visible to Pharmacist AND Nurse */}
-                  {(currentUser.role === "Pharmacist" ||
-                    currentUser.role === "Nurse") && (
+                  {(currentUser.role === "Pharmacist") && (
                     <button
                       onClick={() => {
                         setView("pharmacy");
@@ -355,28 +350,27 @@ function App() {
                   {(currentUser.role === "Admin" ||
                     currentUser.role === "Receptionist" ||
                     currentUser.role === "Nurse") && (
-                    <button
-                      onClick={() => {
-                        setView("billing");
-                        loadBills();
-                      }}
-                      className={`px-4 py-2 rounded-md flex cursor-pointer justify-center hover:scale-110 transition duration-250 font-medium ${view === "billing" ? "bg-purple-600" : "hover:bg-purple-600"}`}
-                    >
-                      <img src={bill} className="w-6 h-6 mr-2" />
-                      Billing
-                    </button>
-                  )}
+                      <button
+                        onClick={() => {
+                          setView("billing");
+                          loadBills();
+                        }}
+                        className={`px-4 py-2 rounded-md flex cursor-pointer justify-center hover:scale-110 transition duration-250 font-medium ${view === "billing" ? "bg-purple-600" : "hover:bg-purple-600"}`}
+                      >
+                        <img src={bill} className="w-6 h-6 mr-2" />
+                        Billing
+                      </button>
+                    )}
 
                   {/* NURSES ONLY */}
                   {currentUser.role === "Nurse" && (
                     <>
                       <button
                         onClick={() => setView("triage")}
-                        className={`px-4 py-2 flex justify-center rounded-md cursor-pointer hover:scale-110 font-medium transition duration-250 ${
-                          view === "triage"
+                        className={`px-4 py-2 flex justify-center rounded-md cursor-pointer hover:scale-110 font-medium transition duration-250 ${view === "triage"
                             ? "bg-purple-600 text-white"
                             : "hover:bg-purple-600 text-gray-200"
-                        }`}
+                          }`}
                       >
                         <img
                           src={trg}
@@ -390,11 +384,10 @@ function App() {
                           setView("nurseSchedule");
                           loadNurseSchedule();
                         }}
-                        className={`px-4 py-2 flex justify-center rounded-md cursor-pointer hover:scale-110 transition duration-250 ${
-                          view === "nurseSchedule"
+                        className={`px-4 py-2 flex justify-center rounded-md cursor-pointer hover:scale-110 transition duration-250 ${view === "nurseSchedule"
                             ? "bg-purple-600"
                             : "hover:bg-purple-600"
-                        }`}
+                          }`}
                       >
                         <img src={appt} className="w-6 h-6 mr-2" />
                         Appointments
@@ -427,11 +420,10 @@ function App() {
                         setView("admin");
                         loadAdminHistory();
                       }}
-                      className={`px-4 py-2 rounded-md font-medium cursor-pointer hover:scale-110 transition duration-250 ${
-                        view === "admin"
+                      className={`px-4 py-2 rounded-md font-medium cursor-pointer hover:scale-110 transition duration-250 ${view === "admin"
                           ? "bg-purple-600"
                           : "hover:bg-slate-700"
-                      }`}
+                        }`}
                     >
                       Admin Panel
                     </button>
@@ -585,56 +577,55 @@ function App() {
         )}
 
         {view === "nurseSchedule" && currentUser?.role === "Nurse" && (
-  <div>
-    <h2 className="text-3xl font-bold mb-6">All Appointments</h2>
+          <div>
+            <h2 className="text-3xl font-bold mb-6">All Appointments</h2>
 
-    {nurseSchedule.length === 0 ? (
-      <p>No scheduled appointments.</p>
-    ) : (
-      <div className="bg-slate-900/70 backdrop-blur-lg border border-slate-700 shadow rounded-lg overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-slate-900 text-orange-400 border-b border-slate-700">
-            <tr className="hover:bg-slate-800/60 text-orange-500 transition border-b">
-              <th className="py-3 px-6 text-left">Patient</th>
-              <th className="py-3 px-6 text-center">Doctor</th>
-              <th className="py-3 px-6 text-center">Time</th>
-              {/* Added Urgency Header */}
-              <th className="py-3 px-6 text-center">Urgency</th> 
-            </tr>
-          </thead>
-          <tbody>
-            {nurseSchedule.map((item, index) => (
-              <tr
-                key={index}
-                className="hover:bg-slate-800/60 transition border-b"
-              >
-                <td className="py-3 px-6 text-left">
-                  {item.patient_name}
-                </td>
-                <td className="py-3 px-6 text-center">
-                  {item.doctor_name}
-                </td>
-                <td className="py-3 px-6 font-semibold text-purple-600 text-center">
-                  {item.appointment_time}
-                </td>
-                {/* Added Urgency Data Cell */}
-                <td className="py-3 px-6 text-center font-medium">
-                  <span className={`px-2 py-1 rounded-full text-xs ${
-                    item.urgency_level === 'High' ? 'bg-red-500/20 text-red-400' : 
-                    item.urgency_level === 'Medium' ? 'bg-yellow-500/20 text-yellow-400' : 
-                    'bg-green-500/20 text-green-400'
-                  }`}>
-                    {item.urgency_level}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    )}
-  </div>
-)}
+            {nurseSchedule.length === 0 ? (
+              <p>No scheduled appointments.</p>
+            ) : (
+              <div className="bg-slate-900/70 backdrop-blur-lg border border-slate-700 shadow rounded-lg overflow-hidden">
+                <table className="w-full">
+                  <thead className="bg-slate-900 text-orange-400 border-b border-slate-700">
+                    <tr className="hover:bg-slate-800/60 text-orange-500 transition border-b">
+                      <th className="py-3 px-6 text-left">Patient</th>
+                      <th className="py-3 px-6 text-center">Doctor</th>
+                      <th className="py-3 px-6 text-center">Time</th>
+                      {/* Added Urgency Header */}
+                      <th className="py-3 px-6 text-center">Urgency</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {nurseSchedule.map((item, index) => (
+                      <tr
+                        key={index}
+                        className="hover:bg-slate-800/60 transition border-b"
+                      >
+                        <td className="py-3 px-6 text-left">
+                          {item.patient_name}
+                        </td>
+                        <td className="py-3 px-6 text-center">
+                          {item.doctor_name}
+                        </td>
+                        <td className="py-3 px-6 font-semibold text-purple-600 text-center">
+                          {item.appointment_time}
+                        </td>
+                        {/* Added Urgency Data Cell */}
+                        <td className="py-3 px-6 text-center font-medium">
+                          <span className={`px-2 py-1 rounded-full text-xs ${item.urgency_level === 'High' ? 'bg-red-500/20 text-red-400' :
+                              item.urgency_level === 'Medium' ? 'bg-yellow-500/20 text-yellow-400' :
+                                'bg-green-500/20 text-green-400'
+                            }`}>
+                            {item.urgency_level}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* VIEW 0.5: LOGIN */}
         {view === "login" && (
@@ -814,10 +805,53 @@ function App() {
           <DoctorDashboard doctorId={currentUser.id} showSchedule={true} />
         )}
 
+        {/* VIEW: PHARMACY & BILLING (Only Pharmacist can see this) */}
+        {view === "billing" && currentUser?.role === "Pharmacist" && (
+          <div className="p-8">
+            <h2 className="text-3xl font-bold mb-6 text-slate-800">Pharmacy & Billing Desk</h2>
+
+            <div className="bg-white shadow rounded-lg overflow-hidden">
+              <table className="w-full text-left">
+                <thead className="bg-slate-900 text-white">
+                  <tr>
+                    <th className="p-4">Patient Name</th>
+                    <th className="p-4">Doctor</th>
+                    <th className="p-4">Prescription</th>
+                    <th className="p-4">Total Amount (Inc. ₹500 Fee)</th>
+                    <th className="p-4">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {/* Assume 'pendingBills' is fetched from your backend */}
+                  {pendingBills.length === 0 ? (
+                    <tr><td colSpan="5" className="p-4 text-center">No pending bills.</td></tr>
+                  ) : (
+                    pendingBills.map((bill) => (
+                      <tr key={bill.id} className="border-b">
+                        <td className="p-4">{bill.patient_name}</td>
+                        <td className="p-4">{bill.doctor_name}</td>
+                        <td className="p-4 text-sm text-gray-600">{bill.prescription}</td>
+                        <td className="p-4 font-bold text-rose-600">₹{bill.bill_total}</td>
+                        <td className="p-4">
+                          <button
+                            onClick={() => handleProcessPayment(bill.id)}
+                            className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded font-bold"
+                          >
+                            Collect & Pay
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
         {/* VIEW 3: PHARMACY */}
         {view === "pharmacy" &&
-          (currentUser?.role === "Pharmacist" ||
-            currentUser?.role === "Nurse") && (
+          (currentUser?.role === "Pharmacist") && (
             <div>
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-3xl font-bold text-white">Pharmacy Hub</h2>
@@ -929,11 +963,10 @@ function App() {
                           </td>
                           <td className="py-4 px-6">
                             <span
-                              className={`px-3 py-1 rounded-full text-xs font-bold ${
-                                bill.payment_status === "Paid"
+                              className={`px-3 py-1 rounded-full text-xs font-bold ${bill.payment_status === "Paid"
                                   ? "bg-green-100 text-green-700"
                                   : "bg-red-100 text-red-700"
-                              }`}
+                                }`}
                             >
                               {bill.payment_status}
                             </span>
