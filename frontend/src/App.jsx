@@ -26,7 +26,11 @@ const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 // Array of images for the slider
 const sliderImages = [home, emergency, walk, baby];
 
+
+
 function App() {
+
+  const [pendingBills, setPendingBills] = useState([]);
   const [view, setView] = useState("home");
 
   // App State
@@ -61,7 +65,7 @@ function App() {
   const [bills, setBills] = useState([]);
 
   const [conditions, setConditions] = useState([]);
-  const [medicineCost, setMedicineCosts] = useState({});
+  const [medicineCosts, setMedicineCosts] = useState({});
 
 
   // --- INITIAL LOAD & SLIDER TIMER ---
