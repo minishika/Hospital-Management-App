@@ -61,6 +61,8 @@ function App() {
   const [bills, setBills] = useState([]);
 
   const [conditions, setConditions] = useState([]);
+  const [medicineCost, setMedicineCosts] = useState({});
+
 
   // --- INITIAL LOAD & SLIDER TIMER ---
   useEffect(() => {
@@ -102,6 +104,9 @@ function App() {
 
     return () => clearInterval(slideInterval); // Cleanup on unmount
   }, []);
+
+  // Function to handle the Pharmacist clicking "Collect & Pay"
+
 
   useEffect(() => {
     if (!patientData.doctor_id || doctorsList.length === 0) return;
@@ -175,9 +180,6 @@ function App() {
     } else if (userData.role === "Admin") {
       setView("admin");
       loadAdminHistory();
-    } else if (userData.role === "Receptionist") {
-      setView("billing");
-      loadBills();
     } else {
       setView("home");
     }
@@ -241,6 +243,52 @@ function App() {
     }
   };
 
+  // Function to get bills from the backend
+  // Fetch pending prescriptions
+  const fetchPendingBills = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/pharmacy/pending`);
+      setPendingBills(res.data);
+    } catch (error) {
+      console.error("Failed to fetch pending pharmacy queue:", error);
+    }
+  };
+
+  // Generate and Pay
+  const handleProcessPayment = async (appointmentId) => {
+    const cost = medicineCosts[appointmentId] || 0;
+
+    if (cost === 0) {
+      const confirmZero = window.confirm("Medicine cost is ₹0. Are you sure?");
+      if (!confirmZero) return;
+    }
+
+    const confirmPay = window.confirm(`Generate bill and collect payment? (Includes ₹500 Doctor Fee)`);
+    if (!confirmPay) return;
+
+    try {
+      await axios.post(`${API_URL}/pharmacy/bill_and_pay/${appointmentId}`, {
+        medicine_cost: parseFloat(cost)
+      });
+
+      alert("Payment successful! Medicines can be dispatched.");
+
+      // Clear the input and refresh the table
+      setMedicineCosts(prev => ({ ...prev, [appointmentId]: "" }));
+      fetchPendingBills();
+    } catch (error) {
+      console.error("Payment failed", error);
+      alert("Failed to process payment.");
+    }
+  };
+
+  // Trigger the fetch automatically when the Pharmacist goes to the billing view
+  useEffect(() => {
+    if (view === "billing" && currentUser?.role === "Pharmacist") {
+      fetchPendingBills();
+    }
+  }, [view, currentUser]);
+
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-950 via-slate-900 to-slate-800 text-gray-200 font-sans">
       {/* TOP NAVIGATION HEADER */}
@@ -288,8 +336,8 @@ function App() {
                   <button
                     onClick={() => setView("patient")}
                     className={`px-4 py-2 flex hover:scale-110 justify-center cursor-pointer transition duration-250 rounded-md font-medium ${view === "patient"
-                        ? "bg-purple-600 text-white"
-                        : "hover:bg-purple-600 text-gray-200"
+                      ? "bg-purple-600 text-white"
+                      : "hover:bg-purple-600 text-gray-200"
                       }`}
                   >
                     <img src={reg} className="w-6 h-6 mr-2" />
@@ -306,8 +354,8 @@ function App() {
                       <button
                         onClick={() => setView("doctor")}
                         className={`px-4 py-2 rounded-md flex hover:scale-110 transition duration-250 cursor-pointer font-medium ${view === "doctor"
-                            ? "bg-purple-600 text-white"
-                            : "hover:bg-purple-600 text-gray-200"
+                          ? "bg-purple-600 text-white"
+                          : "hover:bg-purple-600 text-gray-200"
                           }`}
                       >
                         {" "}
@@ -320,8 +368,8 @@ function App() {
                           setView("schedule");
                         }}
                         className={`px-4 py-2 flex hover:scale-110 cursor-pointer transition duration-250 rounded-md font-medium ${view === "schedule"
-                            ? "bg-purple-600 text-white"
-                            : "hover:bg-purple-600 text-gray-200"
+                          ? "bg-purple-600 text-white"
+                          : "hover:bg-purple-600 text-gray-200"
                           }`}
                       >
                         {" "}
@@ -348,8 +396,8 @@ function App() {
 
                   {/* BILLING: Visible to Admin, Receptionist, AND Nurse */}
                   {(currentUser.role === "Admin" ||
-                    currentUser.role === "Receptionist" ||
-                    currentUser.role === "Nurse") && (
+
+                    currentUser.role === "Pharmacist") && (
                       <button
                         onClick={() => {
                           setView("billing");
@@ -368,8 +416,8 @@ function App() {
                       <button
                         onClick={() => setView("triage")}
                         className={`px-4 py-2 flex justify-center rounded-md cursor-pointer hover:scale-110 font-medium transition duration-250 ${view === "triage"
-                            ? "bg-purple-600 text-white"
-                            : "hover:bg-purple-600 text-gray-200"
+                          ? "bg-purple-600 text-white"
+                          : "hover:bg-purple-600 text-gray-200"
                           }`}
                       >
                         <img
@@ -385,8 +433,8 @@ function App() {
                           loadNurseSchedule();
                         }}
                         className={`px-4 py-2 flex justify-center rounded-md cursor-pointer hover:scale-110 transition duration-250 ${view === "nurseSchedule"
-                            ? "bg-purple-600"
-                            : "hover:bg-purple-600"
+                          ? "bg-purple-600"
+                          : "hover:bg-purple-600"
                           }`}
                       >
                         <img src={appt} className="w-6 h-6 mr-2" />
@@ -421,8 +469,8 @@ function App() {
                         loadAdminHistory();
                       }}
                       className={`px-4 py-2 rounded-md font-medium cursor-pointer hover:scale-110 transition duration-250 ${view === "admin"
-                          ? "bg-purple-600"
-                          : "hover:bg-slate-700"
+                        ? "bg-purple-600"
+                        : "hover:bg-slate-700"
                         }`}
                     >
                       Admin Panel
@@ -612,8 +660,8 @@ function App() {
                         {/* Added Urgency Data Cell */}
                         <td className="py-3 px-6 text-center font-medium">
                           <span className={`px-2 py-1 rounded-full text-xs ${item.urgency_level === 'High' ? 'bg-red-500/20 text-red-400' :
-                              item.urgency_level === 'Medium' ? 'bg-yellow-500/20 text-yellow-400' :
-                                'bg-green-500/20 text-green-400'
+                            item.urgency_level === 'Medium' ? 'bg-yellow-500/20 text-yellow-400' :
+                              'bg-green-500/20 text-green-400'
                             }`}>
                             {item.urgency_level}
                           </span>
@@ -806,48 +854,7 @@ function App() {
         )}
 
         {/* VIEW: PHARMACY & BILLING (Only Pharmacist can see this) */}
-        {view === "billing" && currentUser?.role === "Pharmacist" && (
-          <div className="p-8">
-            <h2 className="text-3xl font-bold mb-6 text-slate-800">Pharmacy & Billing Desk</h2>
 
-            <div className="bg-white shadow rounded-lg overflow-hidden">
-              <table className="w-full text-left">
-                <thead className="bg-slate-900 text-white">
-                  <tr>
-                    <th className="p-4">Patient Name</th>
-                    <th className="p-4">Doctor</th>
-                    <th className="p-4">Prescription</th>
-                    <th className="p-4">Total Amount (Inc. ₹500 Fee)</th>
-                    <th className="p-4">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {/* Assume 'pendingBills' is fetched from your backend */}
-                  {pendingBills.length === 0 ? (
-                    <tr><td colSpan="5" className="p-4 text-center">No pending bills.</td></tr>
-                  ) : (
-                    pendingBills.map((bill) => (
-                      <tr key={bill.id} className="border-b">
-                        <td className="p-4">{bill.patient_name}</td>
-                        <td className="p-4">{bill.doctor_name}</td>
-                        <td className="p-4 text-sm text-gray-600">{bill.prescription}</td>
-                        <td className="p-4 font-bold text-rose-600">₹{bill.bill_total}</td>
-                        <td className="p-4">
-                          <button
-                            onClick={() => handleProcessPayment(bill.id)}
-                            className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded font-bold"
-                          >
-                            Collect & Pay
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
 
         {/* VIEW 3: PHARMACY */}
         {view === "pharmacy" &&
@@ -904,89 +911,76 @@ function App() {
 
         {/* VIEW 4: BILLING */}
         {view === "billing" &&
-          (currentUser?.role === "Admin" ||
-            currentUser?.role === "Receptionist" ||
-            currentUser?.role === "Nurse") && (
+          (currentUser?.role === "Admin" || currentUser?.role === "Pharmacist") && (
             <div>
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-3xl font-bold text-white">
-                  Billing & Finance
+                  Pharmacy & Billing Desk
                 </h2>
                 <button
                   className="border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white font-semibold py-2 px-4 rounded-lg transition"
-                  onClick={loadBills}
+                  onClick={fetchPendingBills} // Changed to our new fetch function
                 >
-                  🔄 Refresh
+                  🔄 Refresh Queue
                 </button>
               </div>
               <div className="bg-slate-900/70 backdrop-blur-lg border border-slate-700 rounded-xl shadow-md overflow-hidden">
                 <table className="w-full text-left border-collapse">
                   <thead className="bg-slate-900 text-blue-400 border-b border-slate-700">
                     <tr className="hover:bg-slate-800/60 transition">
-                      <th className="py-4 px-6 font-semibold text-sm">
-                        Invoice ID
-                      </th>
-                      <th className="py-4 px-6 font-semibold text-sm">
-                        Patient
-                      </th>
-                      <th className="py-4 px-6 font-semibold text-sm">Total</th>
-                      <th className="py-4 px-6 font-semibold text-sm">
-                        Status
-                      </th>
-                      <th className="py-4 px-6 font-semibold text-sm">
-                        Action
-                      </th>
+                      <th className="py-4 px-6 font-semibold text-sm">Patient</th>
+                      <th className="py-4 px-6 font-semibold text-sm">Doctor</th>
+                      <th className="py-4 px-6 font-semibold text-sm">Prescription</th>
+                      <th className="py-4 px-6 font-semibold text-sm">Medicine Cost</th>
+                      <th className="py-4 px-6 font-semibold text-sm">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {bills.length === 0 ? (
+                  <tbody className="divide-y divide-slate-700 text-white">
+                    {(!pendingBills || pendingBills.length === 0) ? (
                       <tr className="hover:bg-slate-800/60 transition">
                         <td
                           colSpan="5"
-                          className="py-8 text-center text-gray-500"
+                          className="py-8 text-center text-gray-400"
                         >
-                          No invoices.
+                          No patients waiting for pharmacy.
                         </td>
                       </tr>
                     ) : (
-                      bills.map((bill) => (
+                      pendingBills.map((item) => (
                         <tr
-                          key={bill.bill_id}
+                          key={item.appointment_id}
                           className="hover:bg-slate-800/60 transition"
                         >
-                          <td className="py-4 px-6 font-bold">
-                            INV-{1000 + bill.bill_id}
-                          </td>
-                          <td className="py-4 px-6">{bill.patient_name}</td>
-                          <td className="py-4 px-6 font-bold">
-                            ₹{bill.total_amount}
+                          <td className="py-4 px-6 font-bold">{item.patient_name}</td>
+                          <td className="py-4 px-6">{item.doctor_name}</td>
+                          <td className="py-4 px-6 text-sm text-gray-300">
+                            {item.prescription}
                           </td>
                           <td className="py-4 px-6">
-                            <span
-                              className={`px-3 py-1 rounded-full text-xs font-bold ${bill.payment_status === "Paid"
-                                  ? "bg-green-100 text-green-700"
-                                  : "bg-red-100 text-red-700"
-                                }`}
+                            <div className="flex items-center gap-2">
+                              <span className="text-gray-400">₹</span>
+                              <input
+                                type="number"
+                                placeholder="Cost"
+                                className="bg-slate-800 border border-slate-600 text-white p-2 rounded w-24 outline-none focus:ring-2 focus:ring-blue-500"
+                                value={medicineCosts[item.appointment_id] || ""}
+                                onChange={(e) => setMedicineCosts({
+                                  ...medicineCosts,
+                                  [item.appointment_id]: e.target.value
+                                })}
+                              />
+                            </div>
+                            <div className="text-xs text-blue-400 mt-1 font-semibold">
+                              + ₹500 Doc Fee
+                            </div>
+                          </td>
+                          <td className="py-4 px-6">
+                            <button
+                              className="bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-900/40 text-white py-2 px-4 rounded-md transition font-bold"
+                              onClick={() => handleProcessPayment(item.appointment_id)}
                             >
-                              {bill.payment_status}
-                            </span>
-                          </td>
-                          <td className="py-4 px-6">
-                            {bill.payment_status === "Unpaid" ? (
-                              <button
-                                className="bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-900/40 text-white py-1 px-4 rounded-md transition shadow-sm"
-                                onClick={() => handlePayment(bill.bill_id)}
-                              >
-                                Pay
-                              </button>
-                            ) : (
-                              <button
-                                className="bg-gray-200 text-gray-500 py-1 px-4 rounded-md cursor-not-allowed"
-                                disabled
-                              >
-                                Receipt Issued
-                              </button>
-                            )}
+                              Generate & Pay
+                            </button>
                           </td>
                         </tr>
                       ))

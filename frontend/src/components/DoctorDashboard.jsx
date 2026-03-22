@@ -12,7 +12,6 @@ export default function DoctorDashboard({ doctorId, showSchedule }) {
     symptoms: "",
     diagnosis: "",
     prescription: "",
-    medicine_cost: 0,
   });
 
   const loadDoctorSchedule = async () => {
@@ -90,7 +89,6 @@ export default function DoctorDashboard({ doctorId, showSchedule }) {
         symptoms: "",
         diagnosis: "",
         prescription: "",
-        medicine_cost: 0,
       });
       loadQueue();
     } catch (error) {
@@ -265,23 +263,7 @@ export default function DoctorDashboard({ doctorId, showSchedule }) {
                     required
                   ></textarea>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-green-400 mb-1">
-                    Medicine Cost ($)
-                  </label>
-                  <input
-                    type="number"
-                    className="w-full border rounded-lg p-3 outline-none text-white focus:ring-2 border-pink-500 focus:ring-purple-500"
-                    value={consultData.medicine_cost}
-                    onChange={(e) =>
-                      setConsultData({
-                        ...consultData,
-                        medicine_cost: parseFloat(e.target.value) || 0,
-                      })
-                    }
-                    required
-                  />
-                </div>
+                
                 <button
                   type="submit"
                   className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-lg transition duration-300 shadow-md cursor-pointer hover:shadow-green-300/50 hover:shadow-2xl hover:scale-105"
